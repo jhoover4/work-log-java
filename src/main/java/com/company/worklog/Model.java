@@ -169,7 +169,7 @@ public abstract class Model {
         try {
             Statement stmt = this.conn.createStatement();
 
-            String sql = "SELCT * FROM " + this.tableName + " WHERE " + searchField + " = " + searchValue + ";";
+            String sql = "SELECT * FROM " + this.tableName + " WHERE " + searchField + " = " + searchValue + ";";
 
             stmt.executeUpdate(sql);
         } catch (SQLException se) {

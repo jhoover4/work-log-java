@@ -9,7 +9,7 @@ import java.util.concurrent.Callable;
 // Record each of these items into a row of a CSV file along with a date.
 
 @CommandLine.Command(description = "Asks user to add a new task to database.",
-        name = "addTask", mixinStandardHelpOptions = true)
+        name = "add", mixinStandardHelpOptions = true)
 class AddTask implements Callable<Integer> {
 
     @CommandLine.Option(names = {"-n", "--task_name"}, description = "Task Name", interactive = true)
@@ -24,22 +24,25 @@ class AddTask implements Callable<Integer> {
     @CommandLine.Option(names = {"-N", "--notes"}, description = "Any notes about the task", interactive = true)
     private String notes;
 
-    public static void main(String... args) throws Exception {
-        int exitCode = new CommandLine(new AddTask()).execute(args);
-        System.exit(exitCode);
+    private Task task;
+
+//    public static void main(String... args) throws Exception {
+//        int exitCode = new CommandLine(new AddTask()).execute(args);
+//        System.exit(exitCode);
+//    }
+
+    AddTask(Task task) {
+        this.task = task;
     }
 
     @Override
     public Integer call() throws Exception {
-        // TODO: Need to get connection in here somehow
-        Task task = new Task();
-
         HashMap<String, String> employeeMap = new HashMap<String, String>();
         employeeMap.put("task_date", taskDate);
         employeeMap.put("title", taskName);
         employeeMap.put("time_spent", timeSpent);
         employeeMap.put("notes", notes);
-        task.create(employeeMap);
+        this.task.create(employeeMap);
 
         System.out.println("Task added successfully!");
         return 0;
