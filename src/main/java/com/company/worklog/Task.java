@@ -10,7 +10,7 @@ public class Task extends Model {
 
         this.tableName = "Task";
 
-        this.fields = new HashMap<String, String>();
+        this.fields = new HashMap<>();
         this.fields.put("task_date", "DateTime");
         this.fields.put("title", "CharField");
         this.fields.put("time_spent", "Integer");
@@ -22,6 +22,6 @@ public class Task extends Model {
         this.foreignKeys = new String[1];
         this.foreignKeys[0] = "Employee";
 
-        createTable();
+        this.createTable();
     }
 }

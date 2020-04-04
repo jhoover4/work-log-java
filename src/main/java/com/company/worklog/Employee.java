@@ -10,12 +10,12 @@ public class Employee extends Model {
 
         this.tableName = "Employee";
 
-        this.fields = new HashMap<String, String>();
+        this.fields = new HashMap<>();
         this.fields.put("Name", "CharField");
 
         this.required = new String[1];
         this.required[0] = "Name";
 
-        createTable();
+        this.createTable();
     }
 }

@@ -25,7 +25,7 @@ public abstract class Model {
     Model(Connection conn) {
         this.conn = conn;
 
-        this.fieldMapper = new HashMap<String, String>();
+        this.fieldMapper = new HashMap<>();
         this.fieldMapper.put("charfield", "TEXT");
         this.fieldMapper.put("datetime", "INTEGER");
         this.fieldMapper.put("integer", "INTEGER");
@@ -33,11 +33,9 @@ public abstract class Model {
     }
 
     /**
-     * Creates initial table schema for model. Could probably use some refactoring at a later point.
-     *
-     * @throws SQLException - Any unexpected sql errors encountered in application.
+     * Creates initial table schema for model.
      */
-    protected void createTable() throws SQLException {
+    protected void createTable() {
         try {
             Statement stmt = this.conn.createStatement();
 
@@ -92,31 +90,15 @@ public abstract class Model {
         }
     }
 
-    private boolean isValidFields(HashMap<String, String> values) {
-        if (values.isEmpty()) {
-            return false;
-        }
-
-        ArrayList<String> modelKeys = new ArrayList<String>();
-
-        for (Map.Entry<String, String> entry : this.fields.entrySet()) {
-            modelKeys.add(entry.getKey());
-        }
-
-        for (Map.Entry<String, String> entry : values.entrySet()) {
-            String key = entry.getKey();
-
-            if (!modelKeys.contains(key)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public void create(HashMap<String, String> entry) throws Error {
+    /**
+     * Creates a database entry.
+     *
+     * @param entry - The values and fields to use when creating the entry.
+     * @throws Exception - Throws exception if fields are not valid.
+     */
+    public void create(HashMap<String, String> entry) throws Exception {
         if (!this.isValidFields(entry)) {
-            throw new Error("SQL fields provided are invalid.");
+            throw new Exception("SQL fields provided are invalid.");
         }
 
         try {
@@ -127,44 +109,78 @@ public abstract class Model {
 
             for (Map.Entry<String, String> record : entry.entrySet()) {
                 fields.append(record.getKey());
+                fields.append(", ");
                 values.append(record.getValue());
+                values.append(", ");
             }
 
+            fields.deleteCharAt(fields.length() - 1);
+            fields.deleteCharAt(fields.length() - 1);
             fields.append(")");
+
+            values.deleteCharAt(values.length() - 1);
+            values.deleteCharAt(values.length() - 1);
             values.append(")");
 
             String sql = "INSERT INTO " +
                     this.tableName +
                     " " +
                     fields +
-                    "VALUES " +
-                    values;
+                    " VALUES " +
+                    values +
+                    ";";
             stmt.executeUpdate(sql);
         } catch (SQLException se) {
             se.printStackTrace();
         }
     }
 
-    public void insert(HashMap<String, String> entry) throws Error {
-        // TODO: Implement
-    }
-
-    public void find(String searchField, String searchValue) throws Error {
-        // TODO: Check for invalid field
+    /**
+     * Updates a row in the database with values provided.
+     *
+     * @param entry - The database row to update.
+     * @throws Exception - Throws exception if fields are not valid.
+     */
+    public void update(HashMap<String, String> entry) throws Exception {
+        if (!this.isValidFields(entry)) {
+            throw new Exception("SQL fields provided are invalid.");
+        }
 
         try {
+            String setUpUpdate = "UPDATE " + this.tableName + " SET ";
+
+            StringBuilder sql = new StringBuilder(setUpUpdate);
+
+            for (Map.Entry<String, String> record : entry.entrySet()) {
+                String updateCol = record.getKey() + " = " + record.getValue() + ", ";
+                sql.append(updateCol);
+            }
+
+            sql.deleteCharAt(sql.length() - 1);
+            sql.deleteCharAt(sql.length() - 1);
+            sql.append(";");
+
             Statement stmt = this.conn.createStatement();
-
-            String sql = "SELCT * FROM " + this.tableName + " WHERE " + searchField + " = " + searchValue + ";";
-
-            stmt.executeUpdate(sql);
+            stmt.executeUpdate(sql.toString());
         } catch (SQLException se) {
             se.printStackTrace();
         }
     }
 
-    public void find(String searchField, int searchValue) throws Error {
-        // TODO: Check for invalid field
+    /**
+     * Find a database entry based on a field value.
+     *
+     * @param searchField - Model field to search on.
+     * @param searchValue - Field value to search with.
+     * @throws Exception - Throws exception if fields are not valid.
+     */
+    public void find(String searchField, String searchValue) throws Exception {
+        HashMap<String, String> findMap = new HashMap<>();
+        findMap.put(searchField, searchValue);
+
+        if (!this.isValidFields(findMap)) {
+            throw new Exception("SQL fields provided are invalid.");
+        }
 
         try {
             Statement stmt = this.conn.createStatement();
@@ -175,5 +191,39 @@ public abstract class Model {
         } catch (SQLException se) {
             se.printStackTrace();
         }
+    }
+
+    public void find(String searchField, int searchValue) throws Exception {
+        String strSearchValue = Integer.toString(searchValue);
+
+        this.find(searchField, strSearchValue);
+    }
+
+    /**
+     * Validates that the fields are registered with the model.
+     *
+     * @param values - The model fields to check against.
+     * @return - If valid.
+     */
+    private boolean isValidFields(HashMap<String, String> values) {
+        if (values.isEmpty()) {
+            return false;
+        }
+
+        ArrayList<String> modelKeys = new ArrayList<>();
+
+        for (Map.Entry<String, String> entry : this.fields.entrySet()) {
+            modelKeys.add(entry.getKey().toLowerCase());
+        }
+
+        for (Map.Entry<String, String> entry : values.entrySet()) {
+            String key = entry.getKey().toLowerCase();
+
+            if (!modelKeys.contains(key)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
